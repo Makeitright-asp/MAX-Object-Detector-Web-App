@@ -43,11 +43,16 @@ var labels_response = {
       id: '2',
       name: 'dropdownlist'}]};
 
+var label_to_id = {
+  'button': '1',
+  'dropdownlist': '2'};
+
 // Refreshes the label icons visibility
 function updateLabelIcons() {
   $('.label-icon').hide();
   for (var i = 0; i < predictions.length; i++) {
-    var icon_id = '#label-icon-' + predictions[i]['classes'][0]['label_id'];
+    var label_id = label_to_id[predictions[i]['classes'][0]['category_name']];
+    var icon_id = '#label-icon-' + label_id;
     if (predictions[i]['classes'][0]['confidence'] > threshold) {
       $(icon_id).show();
     }
@@ -57,7 +62,8 @@ function updateLabelIcons() {
 // a visibility filter for threshold and and label blacklist
 function displayBox(i) {
   return predictions[i]['classes'][0]['confidence'] > threshold
-    && !filter_list.includes(predictions[i]['classes'][0]['label_id']);
+    && !filter_list.includes(
+      label_to_id[predictions[i]['classes'][0]['category_name']]);
 }
 
 function clearCanvas() {
@@ -87,7 +93,7 @@ function paintCanvas() {
 
     for (var i = 0; i < predictions.length; i++) {
       if (displayBox(i)) {
-        if (predictions[i]['classes'][0]['label_id'] === highlight) {
+        if (label_to_id[predictions[i]['classes'][0]['category_name']] === highlight) {
           ctx.strokeStyle = COLOR_HIGHLIGHT;
         } else {
           ctx.strokeStyle = COLOR_NORMAL;
@@ -124,7 +130,7 @@ function paintLabelText(i, ctx, can) {
   var x = box[bbox_id_2_name[1]] * can.width;
   var bwidth = (box[bbox_id_2_name[3]] - box[bbox_id_2_name[1]]) * can.width;
 
-  var label = predictions[i]['classes'][0]['class_id'];
+  var label = predictions[i]['classes'][0]['category_name'];
   var prob_txt = (probability * 100).toFixed(1) + '%';
   var class_type = 'all';
   var text = label + '-' + class_type + ' : ' + prob_txt;
@@ -136,7 +142,7 @@ function paintLabelText(i, ctx, can) {
   }
   var tHeight = parseInt(ctx.font, 10) * 1.4; 
 
-  if (predictions[i]['classes'][0]['label_id'] === highlight) {
+  if (label_to_id[predictions[i]['classes'][0]['category_name']] === highlight) {
     ctx.fillStyle = COLOR_HIGHLIGHT;
   } else {
     ctx.fillStyle = COLOR_NORMAL;
