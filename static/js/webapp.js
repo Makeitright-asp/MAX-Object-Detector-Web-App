@@ -34,24 +34,187 @@ var filter_list = [];
 var predictions = [];
 
 var labels_response = {
-  count: 2,
+  count: 56,
   labels: [
     {
       id: '1',
-      name: 'button'},
+      name: 'dropdownlist-all'},
     {
       id: '2',
-      name: 'dropdownlist'}]};
+      name: 'dropdownlist-title'},
+    {
+      id: '3',
+      name: 'dropdownlist-dropdownlist'},
+    {
+      id: '4',
+      name: 'dropdownlist-itemlist'},
+    {
+      id: '5',
+      name: 'dropdownlist-item'},
+    {
+      id: '6',
+      name: 'dropdownlist-item_title'},
+    {
+      id: '7',
+      name: 'textbox-all'},
+    {
+      id: '8',
+      name: 'textbox-textbox'},
+    {
+      id: '9',
+      name: 'textbox-title'},
+    {
+      id: '10',
+      name: 'textbox-textbox_value'},
+    {
+      id: '11',
+      name: 'calendar-all'},
+    {
+      id: '12',
+      name: 'calendar-grid'},
+    {
+      id: '13',
+      name: 'calendar-month'},
+    {
+      id: '14',
+      name: 'calendar-year'},
+    {
+      id: '15',
+      name: 'calendar-weekdays'},
+    {
+      id: '16',
+      name: 'calendar-active_day'},
+    {
+      id: '17',
+      name: 'calendar-month_next'},
+    {
+      id: '18',
+      name: 'calendar-month_prev'},
+    {
+      id: '19',
+      name: 'button-all'},
+    {
+      id: '20',
+      name: 'button-title'},
+    {
+      id: '21',
+      name: 'button-button'},
+    {
+      id: '22',
+      name: 'datepicker-all'},
+    {
+      id: '23',
+      name: 'datepicker-datebox'},
+    {
+      id: '24',
+      name: 'datepicker-title'},
+    {
+      id: '25',
+      name: 'datepicker-calendar_button'},
+    {
+      id: '26',
+      name: 'table-all'},
+    {
+      id: '27',
+      name: 'table-title'},
+    {
+      id: '28',
+      name: 'table-table'},
+    {
+      id: '29',
+      name: 'table-body'},
+    {
+      id: '30',
+      name: 'table-columns'},
+    {
+      id: '31',
+      name: 'table-rows'},
+    {
+      id: '32',
+      name: 'table-column_item_title'},
+    {
+      id: '33',
+      name: 'table-row_item_title'},
+    {
+      id: '34',
+      name: 'section-all'},
+    {
+      id: '35',
+      name: 'section-title'},
+    {
+      id: '36',
+      name: 'checkbox-all'},
+    {
+      id: '37',
+      name: 'checkbox-itemlist'},
+    {
+      id: '38',
+      name: 'checkbox-title'},
+    {
+      id: '39',
+      name: 'checkbox-item'},
+    {
+      id: '40',
+      name: 'checkbox-item_selected'},
+    {
+      id: '41',
+      name: 'checkbox-item_unselected'},
+    {
+      id: '42',
+      name: 'checkbox-item_title'},
+    {
+      id: '43',
+      name: 'radiobutton-all'},
+    {
+      id: '44',
+      name: 'radiobutton-itemlist'},
+    {
+      id: '45',
+      name: 'radiobutton-title'},
+    {
+      id: '46',
+      name: 'radiobutton-item'},
+    {
+      id: '47',
+      name: 'radiobutton-item_selected'},
+    {
+      id: '48',
+      name: 'radiobutton-item_unselected'},
+    {
+      id: '49',
+      name: 'radiobutton-item_title'},
+    {
+      id: '50',
+      name: 'listbox-all'},
+    {
+      id: '51',
+      name: 'listbox-itemlist'},
+    {
+      id: '52',
+      name: 'listbox-title'},
+    {
+      id: '53',
+      name: 'listbox-item_selected'},
+    {
+      id: '54',
+      name: 'listbox-item_unselected'},
+    {
+      id: '55',
+      name: 'listbox-item_title'},
+    {
+      id: '56',
+      name: 'screen-screen'}]};
 
-var label_to_id = {
-  'button': '1',
-  'dropdownlist': '2'};
+var label_to_id = [];
+
 
 // Refreshes the label icons visibility
 function updateLabelIcons() {
   $('.label-icon').hide();
   for (var i = 0; i < predictions.length; i++) {
-    var label_id = label_to_id[predictions[i]['classes'][0]['category_name']];
+    var label_name = predictions[i]['classes'][0]['category_name'];
+    var label_type = predictions[i]['classes'][0]['attributes']['type'];
+    var label_id = label_to_id[label_name + '-' + label_type];
     var icon_id = '#label-icon-' + label_id;
     if (predictions[i]['classes'][0]['confidence'] > threshold) {
       $(icon_id).show();
@@ -63,7 +226,8 @@ function updateLabelIcons() {
 function displayBox(i) {
   return predictions[i]['classes'][0]['confidence'] > threshold
     && !filter_list.includes(
-      label_to_id[predictions[i]['classes'][0]['category_name']]);
+      label_to_id[predictions[i]['classes'][0]['category_name'] +
+      '-' + predictions[i]['classes'][0]['attributes']['type']]);
 }
 
 function clearCanvas() {
@@ -93,7 +257,9 @@ function paintCanvas() {
 
     for (var i = 0; i < predictions.length; i++) {
       if (displayBox(i)) {
-        if (label_to_id[predictions[i]['classes'][0]['category_name']] === highlight) {
+        var label_name = predictions[i]['classes'][0]['category_name'];
+        var label_type = predictions[i]['classes'][0]['attributes']['type'];
+        if (label_to_id[label_name + '-' + label_type] === highlight) {
           ctx.strokeStyle = COLOR_HIGHLIGHT;
         } else {
           ctx.strokeStyle = COLOR_NORMAL;
@@ -114,10 +280,10 @@ function paintCanvas() {
 function paintBox(i, ctx, can) {
   ctx.beginPath();
   var corners = predictions[i]['bbox'];
-  var ymin = corners[bbox_id_2_name[0]] * can.height;
-  var xmin = corners[bbox_id_2_name[1]] * can.width;
-  var bheight = (corners[bbox_id_2_name[2]] - corners[bbox_id_2_name[0]]) * can.height;
-  var bwidth = (corners[bbox_id_2_name[3]] - corners[bbox_id_2_name[1]]) * can.width;
+  var ymin = corners[bbox_id_2_name[1]] * can.height;
+  var xmin = corners[bbox_id_2_name[0]] * can.width;
+  var bheight = (corners[bbox_id_2_name[3]] - corners[bbox_id_2_name[1]]) * can.height;
+  var bwidth = (corners[bbox_id_2_name[2]] - corners[bbox_id_2_name[0]]) * can.width;
   ctx.rect(xmin, ymin, bwidth, bheight);
   ctx.stroke();
 }
@@ -126,31 +292,34 @@ function paintBox(i, ctx, can) {
 function paintLabelText(i, ctx, can) {
   var probability = predictions[i]['classes'][0]['confidence'];
   var box = predictions[i]['bbox'];
-  var y = box[bbox_id_2_name[0]] * can.height;
-  var x = box[bbox_id_2_name[1]] * can.width;
-  var bwidth = (box[bbox_id_2_name[3]] - box[bbox_id_2_name[1]]) * can.width;
+  var y = box[bbox_id_2_name[1]] * can.height;
+  var x = box[bbox_id_2_name[0]] * can.width;
+  var bwidth = (box[bbox_id_2_name[2]] - box[bbox_id_2_name[0]]) * can.width;
 
-  var label = predictions[i]['classes'][0]['category_name'];
+  var label_name = predictions[i]['classes'][0]['category_name'];
+  var label_type = predictions[i]['classes'][0]['attributes']['type'];
+  var label = label_name + '-' + label_type;
   var prob_txt = (probability * 100).toFixed(1) + '%';
-  var class_type = 'all';
-  var text = label + '-' + class_type + ' : ' + prob_txt;
+  var text = label + ' : ' + prob_txt;
 
   var tWidth = ctx.measureText(text).width;
   if (tWidth > bwidth) {
     tWidth = ctx.measureText(label).width;
     text = label;
   }
-  var tHeight = parseInt(ctx.font, 10) * 1.4; 
+  var tHeight = parseInt(ctx.font, 10) * 1.1;
 
-  if (label_to_id[predictions[i]['classes'][0]['category_name']] === highlight) {
+  if (label_to_id[label] === highlight) {
     ctx.fillStyle = COLOR_HIGHLIGHT;
   } else {
     ctx.fillStyle = COLOR_NORMAL;
   }
-  ctx.fillRect(x, y, tWidth + 3, tHeight);
+  ctx.fillRect(x-1, y - tHeight, tWidth + 3, tHeight);
+  // ctx.fillRect(x, y, tWidth + 3, tHeight);
 
   ctx.fillStyle = COLOR_TEXT;
-  ctx.fillText(text, x + 1, y);
+  // ctx.fillText(text, x + 1, y);
+  ctx.fillText(text, x - 1, y - tHeight);
 }
 
 // Take uploaded image, display to canvas and run model
@@ -239,8 +408,9 @@ $(function() {
       class: 'label-icon',
       id: 'label-icon-' + label.id,
       title: label.name,
-      src: '/img/cocoicons/' + label.id + '.jpg',
+      src: '/img/icons/' + label.id + '.png',
     }));
+    label_to_id[label.name] = label.id;
   });
 
   // Add an "onClick" for each icon
