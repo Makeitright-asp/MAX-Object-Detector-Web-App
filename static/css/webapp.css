@@ -57,14 +57,14 @@ video {
 }
 
 .ibm-code .btn-primary {
-  background-color: #26A8A2;
-  border-color: #32A8A3;
+  background-color: #2a8af7;
+  border-color: #2883ec;
   white-space: normal;
 }
 
 .ibm-code .btn-primary:hover {
-  background-color: #1E8B87;
-  border-color: #2D8B89;
+  background-color: #1c5aa0;
+  border-color: #185091;
 }
 
 .info-icon {
@@ -95,7 +95,7 @@ video {
 .label-icon {
   display: none;
   margin: 2px;
-  width: 50px;
+  width: 150px;
   height: 50px;
   cursor: pointer;
 }

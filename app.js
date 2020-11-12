@@ -22,7 +22,7 @@ var express = require('express');
 
 var args = yargs
   .default('port', 8090)
-  .default('model', 'http://localhost:5000')
+  .default('model', 'http://localhost:8000')
   .argv;
 
 var app = express();

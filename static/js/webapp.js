@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2018 IBM Corp. All Rights Reserved.
  *
@@ -25,17 +26,29 @@ const COLOR_HIGHLIGHT = '#FFFFFF'; // White
 const COLOR_TEXT = '#000000'; // Black
 
 // global vars
+var bbox_id_2_name = ['left', 'top', 'right', 'bottom'];
+
 var threshold = 0.5;
 var highlight = '';
 var filter_list = [];
 var predictions = [];
 
+var labels_response = {
+  count: 2,
+  labels: [
+    {
+      id: '1',
+      name: 'button'},
+    {
+      id: '2',
+      name: 'dropdownlist'}]};
+
 // Refreshes the label icons visibility
 function updateLabelIcons() {
   $('.label-icon').hide();
   for (var i = 0; i < predictions.length; i++) {
-    var icon_id = '#label-icon-' + predictions[i]['label_id'];
-    if (predictions[i]['probability'] > threshold) {
+    var icon_id = '#label-icon-' + predictions[i]['classes'][0]['label_id'];
+    if (predictions[i]['classes'][0]['confidence'] > threshold) {
       $(icon_id).show();
     }
   }
@@ -43,8 +56,8 @@ function updateLabelIcons() {
 
 // a visibility filter for threshold and and label blacklist
 function displayBox(i) {
-  return predictions[i]['probability'] > threshold
-    && !filter_list.includes(predictions[i]['label_id']);
+  return predictions[i]['classes'][0]['confidence'] > threshold
+    && !filter_list.includes(predictions[i]['classes'][0]['label_id']);
 }
 
 function clearCanvas() {
@@ -74,7 +87,7 @@ function paintCanvas() {
 
     for (var i = 0; i < predictions.length; i++) {
       if (displayBox(i)) {
-        if (predictions[i]['label_id'] === highlight) {
+        if (predictions[i]['classes'][0]['label_id'] === highlight) {
           ctx.strokeStyle = COLOR_HIGHLIGHT;
         } else {
           ctx.strokeStyle = COLOR_NORMAL;
@@ -94,35 +107,36 @@ function paintCanvas() {
 // module function for painting bounding box on canvas
 function paintBox(i, ctx, can) {
   ctx.beginPath();
-  var corners = predictions[i]['detection_box'];
-  var ymin = corners[0] * can.height;
-  var xmin = corners[1] * can.width;
-  var bheight = (corners[2] - corners[0]) * can.height;
-  var bwidth = (corners[3] - corners[1]) * can.width;
+  var corners = predictions[i]['bbox'];
+  var ymin = corners[bbox_id_2_name[0]] * can.height;
+  var xmin = corners[bbox_id_2_name[1]] * can.width;
+  var bheight = (corners[bbox_id_2_name[2]] - corners[bbox_id_2_name[0]]) * can.height;
+  var bwidth = (corners[bbox_id_2_name[3]] - corners[bbox_id_2_name[1]]) * can.width;
   ctx.rect(xmin, ymin, bwidth, bheight);
   ctx.stroke();
 }
 
 // module function for painting label text on canvas
 function paintLabelText(i, ctx, can) {
-  var probability = predictions[i]['probability'];
-  var box = predictions[i]['detection_box'];
-  var y = box[0] * can.height;
-  var x = box[1] * can.width;
-  var bwidth = (box[3] - box[1]) * can.width;
+  var probability = predictions[i]['classes'][0]['confidence'];
+  var box = predictions[i]['bbox'];
+  var y = box[bbox_id_2_name[0]] * can.height;
+  var x = box[bbox_id_2_name[1]] * can.width;
+  var bwidth = (box[bbox_id_2_name[3]] - box[bbox_id_2_name[1]]) * can.width;
 
-  var label = predictions[i]['label'];
+  var label = predictions[i]['classes'][0]['class_id'];
   var prob_txt = (probability * 100).toFixed(1) + '%';
-  var text = label + ' : ' + prob_txt;
+  var class_type = 'all';
+  var text = label + '-' + class_type + ' : ' + prob_txt;
 
   var tWidth = ctx.measureText(text).width;
   if (tWidth > bwidth) {
     tWidth = ctx.measureText(label).width;
     text = label;
   }
-  var tHeight = parseInt(ctx.font, 10) * 1.4;
+  var tHeight = parseInt(ctx.font, 10) * 1.4; 
 
-  if (predictions[i]['label_id'] === highlight) {
+  if (predictions[i]['classes'][0]['label_id'] === highlight) {
     ctx.fillStyle = COLOR_HIGHLIGHT;
   } else {
     ctx.fillStyle = COLOR_NORMAL;
@@ -164,67 +178,6 @@ function submitImageInput(event) {
 
 }
 
-// Enable the webcam
-function runWebcam() {
-  clearCanvas();
-  var video_html = '<video playsinline autoplay></video>';
-  $('#webcam-video').html(video_html);
-  var video = document.querySelector('video');
-
-  var constraints = {
-    audio: false,
-    video: { width: 9999, height: 9999 },
-  };
-
-  navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-    window.stream = stream; // make stream available to browser console
-    video.srcObject = stream;
-  }).catch(function(error) {
-    console.log(error.message, error.name);
-  });
-
-  // Disable image upload
-  $('#file-submit').prop('disabled', true);
-
-  // Reset button
-  $('#webcam-btn').removeClass('btn-primary').addClass('btn-danger shutter-btn')
-    .text('Snap Picture').click(webcamImageInput).off('click', runWebcam);
-}
-
-// Output video frame to canvas and run model
-function webcamImageInput() {
-  var video = document.querySelector('video');
-  $('#image-display').html('<canvas id="image-canvas"></canvas>');
-  var canvas = document.querySelector('#image-canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  canvas.getContext('2d').drawImage(video, 0, 0);
-
-  var img = document.createElement('img');
-  img.id = 'user-image';
-  img.src = canvas.toDataURL();
-  $('#image-display').prepend(img);
-
-  window.stream.getVideoTracks()[0].stop();
-  $('#webcam-video').empty();
-
-  canvas.toBlob(function(blob) {
-    var data = new FormData();
-    data.append('image', blob);
-    data.append('threshold', 0);
-    sendImage(data);
-  });
-
-  paintCanvas();
-
-  // Reset button
-  $('#webcam-btn').removeClass('shutter-btn btn-danger').addClass('btn-primary')
-    .text('New Picture?').off('click', webcamImageInput).click(runWebcam);
-
-  // Re-enable image upload
-  $('#file-submit').prop('disabled', false);
-}
-
 // Send image to model endpoint
 function sendImage(data) {
   $('#file-submit').text('Detecting...');
@@ -232,14 +185,14 @@ function sendImage(data) {
 
   // Perform file upload
   $.ajax({
-    url: '/model/predict',
+    url: 'http://0.0.0.0:8000/detection/objects',
     method: 'post',
     processData: false,
     contentType: false,
     data: data,
     dataType: 'json',
     success: function(data) {
-      predictions = data['predictions'];
+      predictions = data['objects'];
       paintCanvas();
       if (predictions.length === 0) {
         alert('No Objects Detected');
@@ -247,6 +200,7 @@ function sendImage(data) {
     },
     error: function(jqXHR, status, error) {
       alert('Object Detection Failed: ' + jqXHR.responseText);
+      console.log(jqXHR);
     },
     complete: function() {
       $('#file-submit').text('Submit');
@@ -266,9 +220,6 @@ $(function() {
   // Image upload form submit functionality
   $('#file-upload').on('submit', submitImageInput);
 
-  // Enable webcam
-  $('#webcam-btn').on('click', runWebcam);
-
   // Update threshold value functionality
   $('#threshold-range').on('input', function() {
     $('#threshold-text span').html(this.value);
@@ -277,36 +228,34 @@ $(function() {
   });
 
   // Populate the label icons on page load
-  $.get('/model/labels', function(result) {
-    $.each(result['labels'], function(i, label) {
-      $('#label-icons').append($('<img>', {
-        class: 'label-icon',
-        id: 'label-icon-' + label.id,
-        title: label.name,
-        src: '/img/cocoicons/' + label.id + '.jpg',
-      }));
-    });
+  $.each(labels_response['labels'], function(i, label) {
+    $('#label-icons').append($('<img>', {
+      class: 'label-icon',
+      id: 'label-icon-' + label.id,
+      title: label.name,
+      src: '/img/cocoicons/' + label.id + '.jpg',
+    }));
+  });
 
-    // Add an "onClick" for each icon
-    $('.label-icon').on('click', function() {
-      var this_id = $(this).attr('id').match(/\d+$/)[0];
-      if ($(this).hasClass('hide-label')) {
-        $(this).removeClass('hide-label');
-        filter_list.splice(filter_list.indexOf(this_id), 1);
-      } else {
-        $(this).addClass('hide-label');
-        filter_list.push(this_id);
-      }
-      paintCanvas();
-    });
+  // Add an "onClick" for each icon
+  $('.label-icon').on('click', function() {
+    var this_id = $(this).attr('id').match(/\d+$/)[0];
+    if ($(this).hasClass('hide-label')) {
+      $(this).removeClass('hide-label');
+      filter_list.splice(filter_list.indexOf(this_id), 1);
+    } else {
+      $(this).addClass('hide-label');
+      filter_list.push(this_id);
+    }
+    paintCanvas();
+  });
 
-    // Add mouse over for each icon
-    $('.label-icon').hover(function() {
-      highlight = $(this).attr('id').match(/\d+$/)[0];
-      paintCanvas();
-    }, function() {
-      highlight = '';
-      paintCanvas();
-    });
+  // Add mouse over for each icon
+  $('.label-icon').hover(function() {
+    highlight = $(this).attr('id').match(/\d+$/)[0];
+    paintCanvas();
+  }, function() {
+    highlight = '';
+    paintCanvas();
   });
 });
