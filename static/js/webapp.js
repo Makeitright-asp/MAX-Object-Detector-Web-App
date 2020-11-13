@@ -21,8 +21,8 @@
 'use strict';
 
 // canvas colors
-const COLOR_NORMAL = '#00FF00'; // Lime
-const COLOR_HIGHLIGHT = '#FFFFFF'; // White
+const COLOR_NORMAL = '#45f9ff'; //'#00FF00'; // Lime
+const COLOR_HIGHLIGHT = '#2a8af7' //'#FFFFFF'; // White
 const COLOR_TEXT = '#000000'; // Black
 
 // global vars
@@ -314,7 +314,7 @@ function paintLabelText(i, ctx, can) {
   } else {
     ctx.fillStyle = COLOR_NORMAL;
   }
-  ctx.fillRect(x-1, y - tHeight, tWidth + 3, tHeight);
+  ctx.fillRect(x - 1, y - tHeight, tWidth + 3, tHeight);
   // ctx.fillRect(x, y, tWidth + 3, tHeight);
 
   ctx.fillStyle = COLOR_TEXT;
