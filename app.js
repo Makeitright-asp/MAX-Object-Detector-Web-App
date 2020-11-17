@@ -22,20 +22,20 @@ var express = require('express');
 
 var args = yargs
   .default('port', 8090)
-  .default('model', 'http://localhost:8000')
+  .default('model', 'http://0.0.0.0:8000/detection/objects')
   .argv;
 
 var app = express();
 
 app.use(express.static('static'));
 
-app.all('/model/:route', function(req, res) {
-  req.pipe(request(args.model + req.path))
-    .on('error', function(err) {
-      console.error(err);
-      res.status(500).send('Error connecting to the model microservice');
-    })
-    .pipe(res);
+
+app.get('/config', (err, res) => {
+  res.status(200);
+  res.json({
+    model_address: args.model
+  });
+  res.end();
 });
 
 app.listen(args.port);

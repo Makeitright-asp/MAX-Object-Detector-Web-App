@@ -21,12 +21,25 @@
 'use strict';
 
 // canvas colors
-const COLOR_NORMAL = '#45f9ff'; //'#00FF00'; // Lime
-const COLOR_HIGHLIGHT = '#2a8af7' //'#FFFFFF'; // White
-const COLOR_TEXT = '#000000'; // Black
+const COLOR_HIGHLIGHT = '#000000';
+const COLOR_TEXT = '#FFFFFF';
 
 // global vars
-var bbox_id_2_name = ['left', 'top', 'right', 'bottom'];
+var bbox_id_to_name = ['left', 'top', 'right', 'bottom'];
+var class_name_to_color = {
+  'screen': '#FFFFFF',
+  'dropdownlist': '#E51400',
+  'textbox': '#647687',
+  'calendar': '#A0522D',
+  'button': '#FA6800',
+  'datepicker': '#76608A',
+  'table': '#1BA1E2',
+  'section': '#F0A30A',
+  'checkbox': '#6D8764',
+  'radiobutton': '#E3C800',
+  'listbox': '#60A917',
+  'linkbutton': '#C9006B'
+};
 
 var threshold = 0.5;
 var highlight = '';
@@ -34,8 +47,11 @@ var filter_list = [];
 var predictions = [];
 
 var labels_response = {
-  count: 56,
+  count: 58,
   labels: [
+    {
+      id: '0',
+      name: 'dropdownlist-expand'},
     {
       id: '1',
       name: 'dropdownlist-all'},
@@ -203,7 +219,10 @@ var labels_response = {
       name: 'listbox-item_title'},
     {
       id: '56',
-      name: 'screen-screen'}]};
+      name: 'screen-screen'},
+    {
+      id: '57',
+      name: 'linkbutton-linkbutton'}]};
 
 var label_to_id = [];
 
@@ -262,7 +281,7 @@ function paintCanvas() {
         if (label_to_id[label_name + '-' + label_type] === highlight) {
           ctx.strokeStyle = COLOR_HIGHLIGHT;
         } else {
-          ctx.strokeStyle = COLOR_NORMAL;
+          ctx.strokeStyle = class_name_to_color[label_name];
         }
         paintBox(i, ctx, can);
       }
@@ -280,10 +299,10 @@ function paintCanvas() {
 function paintBox(i, ctx, can) {
   ctx.beginPath();
   var corners = predictions[i]['bbox'];
-  var ymin = corners[bbox_id_2_name[1]] * can.height;
-  var xmin = corners[bbox_id_2_name[0]] * can.width;
-  var bheight = (corners[bbox_id_2_name[3]] - corners[bbox_id_2_name[1]]) * can.height;
-  var bwidth = (corners[bbox_id_2_name[2]] - corners[bbox_id_2_name[0]]) * can.width;
+  var ymin = corners[bbox_id_to_name[1]] * can.height;
+  var xmin = corners[bbox_id_to_name[0]] * can.width;
+  var bheight = (corners[bbox_id_to_name[3]] - corners[bbox_id_to_name[1]]) * can.height;
+  var bwidth = (corners[bbox_id_to_name[2]] - corners[bbox_id_to_name[0]]) * can.width;
   ctx.rect(xmin, ymin, bwidth, bheight);
   ctx.stroke();
 }
@@ -292,9 +311,9 @@ function paintBox(i, ctx, can) {
 function paintLabelText(i, ctx, can) {
   var probability = predictions[i]['classes'][0]['confidence'];
   var box = predictions[i]['bbox'];
-  var y = box[bbox_id_2_name[1]] * can.height;
-  var x = box[bbox_id_2_name[0]] * can.width;
-  var bwidth = (box[bbox_id_2_name[2]] - box[bbox_id_2_name[0]]) * can.width;
+  var y = box[bbox_id_to_name[1]] * can.height;
+  var x = box[bbox_id_to_name[0]] * can.width;
+  var bwidth = (box[bbox_id_to_name[2]] - box[bbox_id_to_name[0]]) * can.width;
 
   var label_name = predictions[i]['classes'][0]['category_name'];
   var label_type = predictions[i]['classes'][0]['attributes']['type'];
@@ -312,7 +331,7 @@ function paintLabelText(i, ctx, can) {
   if (label_to_id[label] === highlight) {
     ctx.fillStyle = COLOR_HIGHLIGHT;
   } else {
-    ctx.fillStyle = COLOR_NORMAL;
+    ctx.fillStyle = class_name_to_color[label_name];
   }
   ctx.fillRect(x - 1, y - tHeight, tWidth + 3, tHeight);
   // ctx.fillRect(x, y, tWidth + 3, tHeight);
@@ -334,8 +353,8 @@ function submitImageInput(event) {
     var form = event.target;
     var file = form[0].files[0];
     var data = new FormData();
-    data.append('image', file);
     data.append('threshold', 0);
+    data.append('image_name', file.name);
 
     // Display image on UI
     var reader = new FileReader();
@@ -347,8 +366,15 @@ function submitImageInput(event) {
       predictions = []; // remove any previous metadata
       updateLabelIcons(); // reset label icons
     };
+    reader.onloadend = function(event) {
+      var binaryString = event.target.result;
+      // this.base64Url = binaryString;
+      // this.base64Url = binaryString.substring(binaryString.lastIndexOf("base64") + 7);
+      data.append('image', binaryString.substring(binaryString.lastIndexOf("base64") + 7));
+      sendImage(data);
+    };
+
     reader.readAsDataURL(file);
-    sendImage(data);
   }
 
 }
@@ -359,29 +385,34 @@ function sendImage(data) {
   $('#file-submit').prop('disabled', true);
 
   // Perform file upload
-  $.ajax({
-    url: 'http://0.0.0.0:8000/detection/objects',
-    method: 'post',
-    processData: false,
-    contentType: false,
-    data: data,
-    dataType: 'json',
-    success: function(data) {
-      predictions = data['objects'];
-      paintCanvas();
-      if (predictions.length === 0) {
-        alert('No Objects Detected');
-      }
-    },
-    error: function(jqXHR, status, error) {
-      alert('Object Detection Failed: ' + jqXHR.responseText);
-      console.log(jqXHR);
-    },
-    complete: function() {
-      $('#file-submit').text('Submit');
-      $('#file-submit').prop('disabled', false);
-      $('#file-input').val('');
-    },
+  var model_address = '';
+  $.get('/config', function(config) {
+    model_address = config.model_address;
+
+    $.ajax({
+      url: model_address,
+      method: 'post',
+      processData: false,
+      contentType: false,
+      data: data,
+      dataType: 'json',
+      success: function(data) {
+        predictions = data['objects'];
+        paintCanvas();
+        if (predictions.length === 0) {
+          alert('No Objects Detected');
+        }
+      },
+      error: function(jqXHR, status, error) {
+        alert('Object Detection Failed: ' + jqXHR.responseText);
+        console.log(jqXHR);
+      },
+      complete: function() {
+        $('#file-submit').text('Submit');
+        $('#file-submit').prop('disabled', false);
+        $('#file-input').val('');
+      },
+    });
   });
 }
 
