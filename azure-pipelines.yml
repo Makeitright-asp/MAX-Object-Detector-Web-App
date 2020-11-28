@@ -14,10 +14,10 @@ variables:
   imageRepository: 'miracle-objectdetector-web-test'
 
 stages:
-- stage: BuildAndPush
+- stage: Main
   displayName: 
   jobs:  
-  - job: Build and push
+  - job: BuildAndPushImage
     displayName: Build and push (display)
     pool:
       vmImage: 'ubuntu-latest'
