@@ -14,7 +14,7 @@ variables:
   imageRepository: 'miracle-objectdetector-web-test'
 
 stages:
-- stage: BuildAndPush_MiracleObjectDetector_Web
+- stage: BuildAndPush
   displayName: 
   jobs:  
   - job: Build and push
