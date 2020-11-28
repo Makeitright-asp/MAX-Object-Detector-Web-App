@@ -10,7 +10,6 @@ resources:
 
 variables:
   tag: '$(Build.BuildId)'
-  containerRegistry: 'miracleai.azurecr.io'
   imageRepository: 'miracle-objectdetector-web-test'
   dockerRegistryServiceConnection: 'miracle-docker-repository'
 
@@ -19,7 +18,7 @@ stages:
   displayName: 
   jobs:  
   - job: BuildAndPushImage
-    displayName: Build and push (display)
+    displayName: Build and push image (web)
     pool:
       vmImage: 'ubuntu-latest'
     steps:
@@ -27,7 +26,7 @@ stages:
       displayName: Build and push an image to container registry
       inputs:
         command: buildAndPush
-        repository: '$(containerRegistry)/$(imageRepository)'
+        repository: '$(imageRepository)'
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
