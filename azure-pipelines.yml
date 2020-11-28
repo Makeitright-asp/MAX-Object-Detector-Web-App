@@ -12,6 +12,7 @@ variables:
   tag: '$(Build.BuildId)'
   containerRegistry: 'miracleai.azurecr.io'
   imageRepository: 'miracle-objectdetector-web-test'
+  dockerRegistryServiceConnection: 'miracle-docker-repository'
 
 stages:
 - stage: Main
