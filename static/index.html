@@ -34,46 +34,64 @@ limitations under the License.
 
     <div class="row">
 
-      <div class="col-md-6">
+      <div class="col-md-3">
 
-        <div id="codait-logo" class="col-md-3">
+        <div id="codait-logo" class="col-md-6">
           <a href="">
             <img src="/img/makeitright_logo.png" />
           </a>
         </div>
 
-        <div class="col-md-3 title-section">
+        <div class="col-md-6 title-section">
           <h1>Miracle</h1>
           <h1>Control detection</h1>
           
         </div>
+      </div>
 
-        <div class="col-md-6">
+      <div class="col-md-3">
+        <div id="image-upload" class="panel panel-default">
 
-          <div id="image-upload" class="panel panel-default">
+          <div class="panel-heading">
+            <div class="panel-title">Upload an image</div>
+          </div>
 
-            <div class="panel-heading">
-              <div class="panel-title">Upload an image</div>
-            </div>
+          <div class="panel-body">
+            <form id="file-upload" enctype="multipart/form-data">
+              <div class="form-group">
+                <input id="file-input" type="file" name="file" accept=".png, .jpg, .jpeg, .gif" />
+              </div>
+              <button id="file-submit" type="submit" class="btn btn-primary">Submit</button>
+            </form>
 
-            <div class="panel-body">
-              <form id="file-upload" enctype="multipart/form-data">
-                <div class="form-group">
-                  <input id="file-input" type="file" name="file" accept=".png, .jpg, .jpeg, .gif" />
-                </div>
-                <button id="file-submit" type="submit" class="btn btn-primary">Submit</button>
-              </form>
-
-            </div>
           </div>
         </div>
       </div>
 
-      
+      <div class="col-md-3">
+        <div id="canvas-tools" class="panel panel-default">
+
+          <div class="panel-heading">
+            <div class="panel-title">
+              Model parameters
+              <span class="info-icon"
+                title="Use this field to choose model you want to do detection with.">&#9432;</span>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <form>
+              <label for="detector">Selected model:</label>
+              <select id="detector" name="detector">
+                <option value="retina-net">RetinaNet</option>
+                <option value="faster-rcnn">Faster R-CNN</option>
+              </select>
+            </form>
+          </div>
+        </div>
+      </div>
 
     </div>
-
-
 
     <div class='row'>
       <div class="col-md-3">
@@ -100,21 +118,20 @@ limitations under the License.
 
       </div>
 
-        <div class="col-md-6">
-
+      <div class="col-md-6">
           <div id="label-filter" class="panel panel-default">
 
-            <div class="panel-heading">
-              <div class="panel-title">
-                Detected classes
-                <span class="info-icon"
-                  title="Select a label icon to filter any matching detected objects. Hovering over an icon will highlight any matching objects.">&#9432;</span>
-              </div>
+          <div class="panel-heading">
+            <div class="panel-title">
+              Detected classes
+              <span class="info-icon"
+                title="Select a label icon to filter any matching detected objects. Hovering over an icon will highlight any matching objects.">&#9432;</span>
             </div>
+          </div>
 
-            <div class="panel-body">
-              <div id="label-icons"></div>
-            </div>
+          <div class="panel-body">
+            <div id="label-icons"></div>
+          </div>
         </div>
       </div>
 

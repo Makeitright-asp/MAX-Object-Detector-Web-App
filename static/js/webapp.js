@@ -353,6 +353,8 @@ function submitImageInput(event) {
     var form = event.target;
     var file = form[0].files[0];
     var data = new FormData();
+
+    data.append('model_type', $('#detector').val());
     data.append('threshold', 0);
     data.append('image_name', file.name);
 
