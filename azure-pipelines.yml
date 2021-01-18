@@ -9,7 +9,6 @@ resources:
 - repo: self
 
 variables:
-  tag: '$(Build.BuildId)'
   imageRepository: 'miracle-objectdetector-web'
   dockerRegistryServiceConnection: 'miracle-docker-repository'
 
@@ -30,4 +29,5 @@ stages:
         dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
-          $(tag)
+          $(Build.BuildId)
+          latest
