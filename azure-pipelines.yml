@@ -10,7 +10,7 @@ resources:
 
 variables:
   tag: '$(Build.BuildId)'
-  imageRepository: 'miracle-objectdetector-web-test'
+  imageRepository: 'miracle-objectdetector-web'
   dockerRegistryServiceConnection: 'miracle-docker-repository'
 
 stages:
